@@ -1,3 +1,153 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<title>SR Enterprise</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box}
+body{
+    margin:0;
+    font-family:'Poppins',sans-serif;
+    background:#f4f6ff;
+    color:#222;
+}
+
+/* HERO */
+.hero{
+    background:linear-gradient(135deg,#5f2cff,#8a4dff);
+    color:#fff;
+    padding:60px 15px;
+    text-align:center;
+}
+.hero h1{font-size:36px;margin-bottom:10px}
+.hero p{font-size:16px}
+.hero img{
+    width:90%;
+    max-width:420px;
+    border-radius:18px;
+    margin:20px 0;
+}
+
+/* BUTTON */
+.btn{
+    background:linear-gradient(135deg,#ff9f00,#ff6a00);
+    color:#fff;
+    padding:15px 32px;
+    border:none;
+    border-radius:30px;
+    font-size:16px;
+    font-weight:600;
+    cursor:pointer;
+}
+
+/* VIDEO CARD */
+.video-card{
+    background:#fff;
+    margin:50px auto;
+    padding:25px;
+    max-width:420px;
+    border-radius:20px;
+    box-shadow:0 20px 40px rgba(0,0,0,.1);
+    text-align:center;
+}
+.video-title{
+    font-size:18px;
+    font-weight:600;
+    margin-bottom:10px;
+}
+.timer{
+    font-size:14px;
+    color:#555;
+    margin-bottom:12px;
+}
+
+/* 9:16 VIDEO */
+.video-wrapper{
+    position:relative;
+    width:100%;
+    aspect-ratio:9/16;
+    background:#000;
+    border-radius:18px;
+    overflow:hidden;
+}
+.video-wrapper iframe{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    border:0;
+}
+
+/* POPUP */
+.popup{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.65);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:999;
+}
+.popup-box{
+    background:#fff;
+    width:90%;
+    max-width:360px;
+    padding:28px;
+    border-radius:22px;
+    text-align:center;
+}
+.popup-box h3{
+    color:#2ecc71;
+    margin-bottom:10px;
+}
+.popup-box p{
+    font-size:15px;
+}
+.popup-box button{
+    margin-top:18px;
+    width:100%;
+    padding:14px;
+    background:linear-gradient(135deg,#5f2cff,#8a4dff);
+    color:#fff;
+    border:none;
+    border-radius:28px;
+    font-weight:600;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HERO -->
+<section class="hero">
+    <h1>SR Enterprise</h1>
+    <p>वीडियो देखें और ₹2 प्रति वीडियो कमाएँ</p>
+
+    <img src="https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg">
+
+    <br>
+    <button class="btn" onclick="scrollToVideo(0)">
+        कमाना शुरू करें
+    </button>
+</section>
+
+<!-- VIDEOS -->
+<div id="videoContainer"></div>
+
+<!-- POPUP -->
+<div class="popup" id="popup">
+    <div class="popup-box">
+        <h3>🎉 बधाई हो!</h3>
+        <p id="popupText"></p>
+        <button id="popupBtn" onclick="closePopup()">ठीक है</button>
+    </div>
+</div>
+
 <script>
 const videos=[
  {src:"https://jumpshare.com/embed/Kejm8b0gKg2XLVxjTosc",time:25},
@@ -10,7 +160,6 @@ const videos=[
 const container=document.getElementById("videoContainer");
 let current=null;
 let timer=null;
-let blockAutoStart=false; // 🔒 MAIN FIX
 
 videos.forEach((v,i)=>{
     const card=document.createElement("div");
@@ -31,18 +180,11 @@ videos.forEach((v,i)=>{
     container.appendChild(card);
 });
 
-/* OBSERVER */
+/* START TIMER WHEN VIDEO IS IN VIEW */
 const observer=new IntersectionObserver(entries=>{
     entries.forEach(entry=>{
         if(entry.isIntersecting){
             const i=entry.target.dataset.index;
-
-            // 🚫 अगला वीडियो button se aaye ho to ignore
-            if(blockAutoStart){
-                blockAutoStart=false;
-                return;
-            }
-
             startTimer(i);
         }
     });
@@ -53,8 +195,7 @@ document.querySelectorAll(".video-card").forEach(card=>{
 });
 
 function startTimer(i){
-    if(current==i) return;
-
+    if(current==i) return; // already running
     current=i;
     clearInterval(timer);
 
@@ -89,9 +230,7 @@ function showPopup(i){
 
 function closePopup(){
     document.getElementById("popup").style.display="none";
-
     if(!videos[current].last){
-        blockAutoStart=true; // 🔒 TIMER BLOCK
         scrollToVideo(parseInt(current)+1);
     }
 }
@@ -101,3 +240,6 @@ function scrollToVideo(i){
     .scrollIntoView({behavior:"smooth"});
 }
 </script>
+
+</body>
+</html>
