@@ -1,0 +1,103 @@
+<script>
+const videos=[
+ {src:"https://jumpshare.com/embed/Kejm8b0gKg2XLVxjTosc",time:25},
+ {src:"https://jumpshare.com/embed/Hl4WY6alMoQsWl6MYZqF",time:12},
+ {src:"https://jumpshare.com/embed/irQmZZ5gRWYz3HjAlTUM",time:36},
+ {src:"https://jumpshare.com/embed/n7mnvhCvK0BxB3L9A9Wy",time:34},
+ {src:"https://jumpshare.com/embed/JeY2q3h6lYLZGcO9lNjl",time:28,last:true}
+];
+
+const container=document.getElementById("videoContainer");
+let current=null;
+let timer=null;
+let blockAutoStart=false; // 🔒 MAIN FIX
+
+videos.forEach((v,i)=>{
+    const card=document.createElement("div");
+    card.className="video-card";
+    card.id="video-"+i;
+    card.dataset.index=i;
+
+    card.innerHTML=`
+        <div class="video-title">वीडियो ${i+1}</div>
+        <div class="timer" id="timer-${i}">
+            समय बचा है: ${v.time} सेकंड
+        </div>
+
+        <div class="video-wrapper">
+            <iframe src="${v.src}" allowfullscreen></iframe>
+        </div>
+    `;
+    container.appendChild(card);
+});
+
+/* OBSERVER */
+const observer=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+        if(entry.isIntersecting){
+            const i=entry.target.dataset.index;
+
+            // 🚫 अगला वीडियो button se aaye ho to ignore
+            if(blockAutoStart){
+                blockAutoStart=false;
+                return;
+            }
+
+            startTimer(i);
+        }
+    });
+},{threshold:0.7});
+
+document.querySelectorAll(".video-card").forEach(card=>{
+    observer.observe(card);
+});
+
+function startTimer(i){
+    if(current==i) return;
+
+    current=i;
+    clearInterval(timer);
+
+    let timeLeft=videos[i].time;
+    const timerEl=document.getElementById("timer-"+i);
+
+    timerEl.innerText=`समय बचा है: ${timeLeft} सेकंड`;
+
+    timer=setInterval(()=>{
+        timeLeft--;
+        timerEl.innerText=`समय बचा है: ${timeLeft} सेकंड`;
+
+        if(timeLeft<=0){
+            clearInterval(timer);
+            showPopup(i);
+        }
+    },1000);
+}
+
+function showPopup(i){
+    document.getElementById("popup").style.display="flex";
+
+    if(videos[i].last){
+        popupText.innerText=
+        "आपने ₹2 कमा लिए हैं।\n\nऔर ज़्यादा कमाने व निकालने के लिए रजिस्टर करें।";
+        popupBtn.innerText="रजिस्टर करें";
+    }else{
+        popupText.innerText="आपने ₹2 कमा लिए हैं। अगला वीडियो देखें।";
+        popupBtn.innerText="अगला वीडियो";
+    }
+}
+
+function closePopup(){
+    document.getElementById("popup").style.display="none";
+
+    if(!videos[current].last){
+        blockAutoStart=true; // 🔒 TIMER BLOCK
+        scrollToVideo(parseInt(current)+1);
+    }
+}
+
+function scrollToVideo(i){
+    document.getElementById("video-"+i)
+    .scrollIntoView({behavior:"smooth"});
+}
+</script>
