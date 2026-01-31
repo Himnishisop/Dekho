@@ -5,118 +5,134 @@
 <title>SR Enterprise</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-*{box-sizing:border-box}
+:root{
+  --primary:#6a4cff;
+  --secondary:#ff8a00;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+
 body{
-    margin:0;
-    font-family:'Poppins',sans-serif;
-    background:#f4f6ff;
-    color:#222;
+  font-family:'Inter',sans-serif;
+  background:
+    radial-gradient(circle at top,#eef1ff,transparent 60%),
+    linear-gradient(#f6f7fb,#fff);
 }
 
 /* HERO */
 .hero{
-    background:linear-gradient(135deg,#5f2cff,#8a4dff);
-    color:#fff;
-    padding:60px 15px;
-    text-align:center;
+  padding:70px 16px 40px;
+  text-align:center;
+  background:linear-gradient(135deg,#6a4cff,#8f6bff);
+  color:#fff;
 }
-.hero h1{font-size:36px;margin-bottom:10px}
-.hero p{font-size:16px}
-.hero img{
-    width:90%;
-    max-width:420px;
-    border-radius:18px;
-    margin:20px 0;
+.hero h1{font-size:36px}
+.hero p{margin-top:8px;font-size:16px}
+
+/* FOUNDER */
+.founder{
+  margin:30px auto 10px;
+  text-align:center;
+}
+.founder img{
+  width:130px;
+  height:130px;
+  border-radius:50%;
+  object-fit:cover;
+  border:4px solid #fff;
+  box-shadow:0 12px 30px rgba(0,0,0,.35);
+}
+.founder h3{
+  margin-top:12px;
+  font-size:17px;
+  font-weight:600;
+}
+.founder span{
+  font-size:14px;
+  opacity:.9;
 }
 
 /* BUTTON */
 .btn{
-    background:linear-gradient(135deg,#ff9f00,#ff6a00);
-    color:#fff;
-    padding:15px 32px;
-    border:none;
-    border-radius:30px;
-    font-size:16px;
-    font-weight:600;
-    cursor:pointer;
+  margin-top:25px;
+  border:none;
+  background:linear-gradient(135deg,var(--secondary),#ff6200);
+  color:#fff;
+  padding:15px 34px;
+  font-size:16px;
+  font-weight:600;
+  border-radius:999px;
+  cursor:pointer;
+  box-shadow:0 12px 28px rgba(255,138,0,.45);
 }
 
-/* VIDEO CARD */
+/* VIDEO */
 .video-card{
-    background:#fff;
-    margin:50px auto;
-    padding:25px;
-    max-width:420px;
-    border-radius:20px;
-    box-shadow:0 20px 40px rgba(0,0,0,.1);
-    text-align:center;
+  max-width:420px;
+  margin:55px auto;
+  padding:22px;
+  background:#fff;
+  border-radius:24px;
+  box-shadow:0 18px 40px rgba(0,0,0,.12);
+  text-align:center;
 }
-.video-title{
-    font-size:18px;
-    font-weight:600;
-    margin-bottom:10px;
-}
-.timer{
-    font-size:14px;
-    color:#555;
-    margin-bottom:12px;
-}
-
-/* 9:16 VIDEO */
+.video-title{font-weight:600}
+.timer{font-size:14px;color:#666;margin:8px 0 12px}
 .video-wrapper{
-    position:relative;
-    width:100%;
-    aspect-ratio:9/16;
-    background:#000;
-    border-radius:18px;
-    overflow:hidden;
+  aspect-ratio:9/16;
+  border-radius:18px;
+  overflow:hidden;
+  background:#000;
 }
-.video-wrapper iframe{
-    position:absolute;
-    inset:0;
-    width:100%;
-    height:100%;
-    border:0;
-}
+iframe{width:100%;height:100%;border:0}
 
-/* POPUP */
+/* POPUPS */
 .popup{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.65);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    z-index:999;
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.7);
+  z-index:999;
 }
 .popup-box{
-    background:#fff;
-    width:90%;
-    max-width:360px;
-    padding:28px;
-    border-radius:22px;
-    text-align:center;
+  width:90%;
+  max-width:360px;
+  background:#fff;
+  padding:26px;
+  border-radius:26px;
+  text-align:center;
 }
-.popup-box h3{
-    color:#2ecc71;
-    margin-bottom:10px;
-}
-.popup-box p{
-    font-size:15px;
-}
+.popup-box h3{color:#22c55e}
 .popup-box button{
-    margin-top:18px;
-    width:100%;
-    padding:14px;
-    background:linear-gradient(135deg,#5f2cff,#8a4dff);
-    color:#fff;
-    border:none;
-    border-radius:28px;
-    font-weight:600;
-    cursor:pointer;
+  margin-top:18px;
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:999px;
+  background:linear-gradient(135deg,var(--primary),#8f6bff);
+  color:#fff;
+  font-weight:600;
+}
+
+/* PAYMENT */
+.qr-img{
+  width:220px;
+  margin:10px auto 15px;
+  display:block;
+}
+.wa-btn{
+  display:block;
+  margin-top:15px;
+  padding:14px;
+  border-radius:999px;
+  background:#25D366;
+  color:#fff;
+  text-decoration:none;
+  font-weight:600;
 }
 </style>
 </head>
@@ -125,27 +141,47 @@ body{
 
 <!-- HERO -->
 <section class="hero">
-    <h1>SR Enterprise</h1>
-    <p>वीडियो देखें और ₹2 प्रति वीडियो कमाएँ</p>
+  <h1>SR Enterprise</h1>
+  <p>वीडियो देखें और ₹2 प्रति वीडियो कमाएँ</p>
 
-    <img src="https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg">
+  <!-- FOUNDER -->
+  <div class="founder">
+    <img src="https://i.ibb.co/C5LYvDdp/Whats-App-Image-2026-01-26-at-4-39-12-PM.jpg" loading="lazy">
+    <h3>प्रोपराइटर चौधरी डाक्टर शेरा प्रवीण</h3>
+    <span>Founder – SR Enterprise</span>
+  </div>
 
-    <br>
-    <button class="btn" onclick="scrollToVideo(0)">
-        कमाना शुरू करें
-    </button>
+  <button class="btn" onclick="scrollToVideo(0)">कमाना शुरू करें</button>
 </section>
 
-<!-- VIDEOS -->
 <div id="videoContainer"></div>
 
-<!-- POPUP -->
+<!-- EARNING POPUP -->
 <div class="popup" id="popup">
-    <div class="popup-box">
-        <h3>🎉 बधाई हो!</h3>
-        <p id="popupText"></p>
-        <button id="popupBtn" onclick="closePopup()">ठीक है</button>
-    </div>
+  <div class="popup-box">
+    <h3>🎉 बधाई हो!</h3>
+    <p id="popupText"></p>
+    <button id="popupBtn">ठीक है</button>
+  </div>
+</div>
+
+<!-- REGISTER / PAYMENT POPUP -->
+<div class="popup" id="registerPopup">
+  <div class="popup-box">
+    <img class="qr-img"
+      src="https://i.ibb.co/Fk9gVV5n/Whats-App-Image-2026-01-27-at-1-19-46-PM.jpg">
+
+    <p>
+      इस QR कोड पर <b>₹5500</b> का पेमेंट करें<br>
+      और हमें उसका स्क्रीनशॉट भेजें
+    </p>
+
+    <a class="wa-btn"
+       href="https://wa.me/919811510887"
+       target="_blank">
+       स्क्रीनशॉट भेजें
+    </a>
+  </div>
 </div>
 
 <script>
@@ -158,86 +194,81 @@ const videos=[
 ];
 
 const container=document.getElementById("videoContainer");
-let current=null;
-let timer=null;
+let active=null,timer=null,played=new Set();
 
 videos.forEach((v,i)=>{
-    const card=document.createElement("div");
-    card.className="video-card";
-    card.id="video-"+i;
-    card.dataset.index=i;
-
-    card.innerHTML=`
-        <div class="video-title">वीडियो ${i+1}</div>
-        <div class="timer" id="timer-${i}">
-            समय बचा है: ${v.time} सेकंड
-        </div>
-
-        <div class="video-wrapper">
-            <iframe src="${v.src}" allowfullscreen></iframe>
-        </div>
-    `;
-    container.appendChild(card);
+  const card=document.createElement("div");
+  card.className="video-card";
+  card.dataset.index=i;
+  card.id="video-"+i;
+  card.innerHTML=`
+    <div class="video-title">वीडियो ${i+1}</div>
+    <div class="timer" id="timer-${i}">
+      समय बचा है: ${v.time} सेकंड
+    </div>
+    <div class="video-wrapper">
+      <iframe src="${v.src}" loading="lazy" allowfullscreen></iframe>
+    </div>`;
+  container.appendChild(card);
 });
 
-/* START TIMER WHEN VIDEO IS IN VIEW */
 const observer=new IntersectionObserver(entries=>{
-    entries.forEach(entry=>{
-        if(entry.isIntersecting){
-            const i=entry.target.dataset.index;
-            startTimer(i);
-        }
-    });
-},{threshold:0.7});
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const i=+e.target.dataset.index;
+      if(!played.has(i)){
+        startTimer(i);
+        played.add(i);
+      }
+    }
+  });
+},{threshold:.75});
 
-document.querySelectorAll(".video-card").forEach(card=>{
-    observer.observe(card);
-});
+document.querySelectorAll(".video-card").forEach(v=>observer.observe(v));
 
 function startTimer(i){
-    if(current==i) return; // already running
-    current=i;
-    clearInterval(timer);
-
-    let timeLeft=videos[i].time;
-    const timerEl=document.getElementById("timer-"+i);
-
-    timerEl.innerText=`समय बचा है: ${timeLeft} सेकंड`;
-
-    timer=setInterval(()=>{
-        timeLeft--;
-        timerEl.innerText=`समय बचा है: ${timeLeft} सेकंड`;
-
-        if(timeLeft<=0){
-            clearInterval(timer);
-            showPopup(i);
-        }
-    },1000);
+  clearInterval(timer);
+  active=i;
+  let t=videos[i].time;
+  const el=document.getElementById("timer-"+i);
+  timer=setInterval(()=>{
+    t--;
+    el.textContent=`समय बचा है: ${t} सेकंड`;
+    if(t<=0){
+      clearInterval(timer);
+      showPopup(i);
+    }
+  },1000);
 }
 
 function showPopup(i){
-    document.getElementById("popup").style.display="flex";
-
-    if(videos[i].last){
-        popupText.innerText=
-        "आपने ₹2 कमा लिए हैं।\n\nऔर ज़्यादा कमाने व निकालने के लिए रजिस्टर करें।";
-        popupBtn.innerText="रजिस्टर करें";
-    }else{
-        popupText.innerText="आपने ₹2 कमा लिए हैं। अगला वीडियो देखें।";
-        popupBtn.innerText="अगला वीडियो";
-    }
+  popup.style.display="flex";
+  if(videos[i].last){
+    popupText.textContent="आपने ₹2 कमा लिए हैं। आगे बढ़ने के लिए रजिस्टर करें।";
+    popupBtn.textContent="रजिस्टर करें";
+    popupBtn.onclick=openRegister;
+  }else{
+    popupText.textContent="आपने ₹2 कमा लिए हैं। अगला वीडियो देखें।";
+    popupBtn.textContent="अगला वीडियो";
+    popupBtn.onclick=closePopup;
+  }
 }
 
 function closePopup(){
-    document.getElementById("popup").style.display="none";
-    if(!videos[current].last){
-        scrollToVideo(parseInt(current)+1);
-    }
+  popup.style.display="none";
+  if(!videos[active].last){
+    scrollToVideo(active+1);
+  }
+}
+
+function openRegister(){
+  popup.style.display="none";
+  registerPopup.style.display="flex";
 }
 
 function scrollToVideo(i){
-    document.getElementById("video-"+i)
-    .scrollIntoView({behavior:"smooth"});
+  document.getElementById("video-"+i)
+  ?.scrollIntoView({behavior:"smooth"});
 }
 </script>
 
