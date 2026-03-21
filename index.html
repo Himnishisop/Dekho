@@ -1,216 +1,116 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Dekho App</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
-<style>
-:root{--primary:#6a4cff;--secondary:#ff8a00}
-*{box-sizing:border-box;margin:0;padding:0}
-body{
- font-family:'Inter',sans-serif;
- background:
- radial-gradient(circle at top,#eef1ff,transparent 60%),
- linear-gradient(#f6f7fb,#fff);
-}
-
-/* HERO */
-.hero{
- padding:70px 16px 30px;
- text-align:center;
- background:linear-gradient(135deg,#6a4cff,#8f6bff);
- color:#fff;
-}
-.hero h1{font-size:38px}
-.hero p{
- margin-top:15px;
- line-height:1.7;
- font-size:15px;
- max-width:700px;
- margin-inline:auto;
-}
-
-/* TOP VIDEO */
-.top-video{
- max-width:380px;
- margin:30px auto 10px;
- aspect-ratio:9/16;
- border-radius:20px;
- overflow:hidden;
- box-shadow:0 15px 40px rgba(0,0,0,.4);
-}
-.top-video iframe{width:100%;height:100%;border:0}
-
-/* FOUNDER */
-.founder{
- margin:35px auto 10px;
- text-align:center;
-}
-.founder img{
- width:130px;height:130px;border-radius:50%;
- object-fit:cover;border:4px solid #fff;
- box-shadow:0 12px 30px rgba(0,0,0,.35);
-}
-.founder h3{margin-top:12px;font-size:17px}
-.founder span{font-size:14px;opacity:.9}
-
-/* BUTTON */
-.btn{
- margin-top:25px;border:none;
- background:linear-gradient(135deg,var(--secondary),#ff6200);
- color:#fff;padding:16px 36px;
- font-size:16px;font-weight:600;
- border-radius:999px;cursor:pointer;
- box-shadow:0 12px 28px rgba(255,138,0,.45);
-}
-
-/* VIDEOS */
-.video-card{
- max-width:420px;margin:55px auto;
- padding:22px;background:#fff;border-radius:24px;
- box-shadow:0 18px 40px rgba(0,0,0,.12);
- text-align:center;
-}
-.timer{font-size:14px;color:#666;margin:8px 0 12px}
-.video-wrapper{aspect-ratio:9/16;border-radius:18px;overflow:hidden;background:#000}
-iframe{width:100%;height:100%;border:0}
-
-/* POPUPS */
-.popup{
- position:fixed;inset:0;display:none;
- align-items:center;justify-content:center;
- background:rgba(0,0,0,.7);z-index:999;
-}
-.popup-box{
- width:90%;max-width:360px;background:#fff;
- padding:26px;border-radius:26px;text-align:center;
-}
-.popup-box h3{color:#22c55e}
-.popup-box button{
- margin-top:18px;width:100%;padding:14px;border:none;
- border-radius:999px;background:linear-gradient(135deg,var(--primary),#8f6bff);
- color:#fff;font-weight:600;
-}
-
-/* PAYMENT */
-.qr-img{width:220px;margin:10px auto 15px;display:block}
-.wa-btn{
- display:block;margin-top:15px;padding:14px;
- border-radius:999px;background:#25D366;
- color:#fff;text-decoration:none;font-weight:600;
-}
-</style>
+  <title>Hand VR Control</title>
+  <style>
+    body { margin:0; overflow:hidden; background:black; }
+    video { display:none; }
+  </style>
 </head>
-
 <body>
 
-<section class="hero">
-<h1>Dekho App</h1>
+<video id="video" autoplay playsinline></video>
 
-<p>
-देखो ऐप एक ऐसा प्लेटफार्म है जहां से आप रोजाना 500 से 1000 रूपये कमा सकते हैं विडियो देखकर इसके लिए आपको अपने मोबाइल फोन मे आई डी बनवानी पडेगी जिस आई डी पर आप रोजाना 1000 विडियो तक देख सकते हैं और 2000 रूपये रोजाना कमा सकते हैं अधिक जानकारी के लिए हमारे व्हाइट सप नम्बर पर मैसेज कर सकते हैं
-</p>
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.158/build/three.module.js";
+import { Hands } from "https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js";
+import { Camera } from "https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js";
 
-<!-- TOP LANDING VIDEO -->
-<div class="top-video">
-<iframe src="https://jumpshare.com/embed/gUp1aerAdlhgCuQDY4Ll" allowfullscreen></iframe>
-</div>
+// THREE SETUP
+const scene = new THREE.Scene();
+const camera3D = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-<div class="founder">
-<img src="https://i.ibb.co/C5LYvDdp/Whats-App-Image-2026-01-26-at-4-39-12-PM.jpg">
-<h3>प्रोपराइटर चौधरी डाक्टर शेरा प्रवीण</h3>
-<span>Founder</span>
-</div>
+camera3D.position.z = 5;
 
-<button class="btn" onclick="scrollToVideo(0)">कमाना शुरू करें</button>
-</section>
+// LIGHT
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(0,1,1);
+scene.add(light);
 
-<div id="videoContainer"></div>
+// STATE
+let currentShape = "sphere";
+let lastPalmTime = 0;
+let lastPinch = false;
 
-<!-- POPUPS SAME AS BEFORE -->
-<div class="popup" id="popup">
- <div class="popup-box">
-  <h3>🎉 बधाई हो!</h3>
-  <p id="popupText"></p>
-  <button id="popupBtn">ठीक है</button>
- </div>
-</div>
+// CREATE OBJECT
+function createShape(x, y) {
+  let geometry;
+  if(currentShape === "sphere"){
+    geometry = new THREE.SphereGeometry(0.3, 32, 32);
+  } else {
+    geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+  }
 
-<div class="popup" id="registerPopup">
- <div class="popup-box">
-  <img class="qr-img" src="https://i.ibb.co/Fk9gVV5n/Whats-App-Image-2026-01-27-at-1-19-46-PM.jpg">
-  <p>इस QR कोड पर <b>₹5500</b> का पेमेंट करें और स्क्रीनशॉट भेजें</p>
-  <a class="wa-btn" href="https://wa.me/919811510887" target="_blank">स्क्रीनशॉट भेजें</a>
- </div>
-</div>
+  const material = new THREE.MeshStandardMaterial({color: Math.random()*0xffffff});
+  const mesh = new THREE.Mesh(geometry, material);
 
-<script>
-const videos=[
- {src:"https://jumpshare.com/embed/Kejm8b0gKg2XLVxjTosc",time:25},
- {src:"https://jumpshare.com/embed/Hl4WY6alMoQsWl6MYZqF",time:12},
- {src:"https://jumpshare.com/embed/irQmZZ5gRWYz3HjAlTUM",time:36},
- {src:"https://jumpshare.com/embed/n7mnvhCvK0BxB3L9A9Wy",time:34},
- {src:"https://jumpshare.com/embed/JeY2q3h6lYLZGcO9lNjl",time:28,last:true}
-];
+  mesh.position.set((x-0.5)*5, -(y-0.5)*5, 0);
+  scene.add(mesh);
+}
 
-const container=document.getElementById("videoContainer");
-let active=null,timer=null,played=new Set();
+// MEDIAPIPE
+const video = document.getElementById("video");
 
-videos.forEach((v,i)=>{
- const card=document.createElement("div");
- card.className="video-card";
- card.dataset.index=i;
- card.id="video-"+i;
- card.innerHTML=`
-  <div class="timer" id="timer-${i}">समय बचा है: ${v.time} सेकंड</div>
-  <div class="video-wrapper">
-   <iframe src="${v.src}" loading="lazy" allowfullscreen></iframe>
-  </div>`;
- container.appendChild(card);
+const hands = new Hands({
+  locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
 });
 
-const observer=new IntersectionObserver(entries=>{
- entries.forEach(e=>{
-  if(e.isIntersecting){
-   const i=+e.target.dataset.index;
-   if(!played.has(i)){startTimer(i);played.add(i);}
+hands.setOptions({
+  maxNumHands: 1,
+  minDetectionConfidence: 0.7,
+  minTrackingConfidence: 0.7
+});
+
+hands.onResults(results => {
+  if(results.multiHandLandmarks.length > 0){
+    const lm = results.multiHandLandmarks[0];
+
+    const thumb = lm[4];
+    const index = lm[8];
+
+    // PINCH DETECT
+    const dist = Math.hypot(thumb.x - index.x, thumb.y - index.y);
+    const isPinch = dist < 0.05;
+
+    if(isPinch && !lastPinch){
+      createShape(index.x, index.y);
+    }
+    lastPinch = isPinch;
+
+    // OPEN PALM DETECT (simple: fingers spread)
+    const isOpenPalm =
+      lm[8].y < lm[6].y &&
+      lm[12].y < lm[10].y &&
+      lm[16].y < lm[14].y &&
+      lm[20].y < lm[18].y;
+
+    if(isOpenPalm && Date.now() - lastPalmTime > 1500){
+      currentShape = (currentShape === "sphere") ? "cube" : "sphere";
+      console.log("Switched to:", currentShape);
+      lastPalmTime = Date.now();
+    }
   }
- });
-},{threshold:.75});
+});
 
-document.querySelectorAll(".video-card").forEach(v=>observer.observe(v));
+const cam = new Camera(video, {
+  onFrame: async () => {
+    await hands.send({image: video});
+  },
+  width: 640,
+  height: 480
+});
+cam.start();
 
-function startTimer(i){
- clearInterval(timer);
- active=i;
- let t=videos[i].time;
- const el=document.getElementById("timer-"+i);
- timer=setInterval(()=>{
-  t--;
-  el.textContent=`समय बचा है: ${t} सेकंड`;
-  if(t<=0){clearInterval(timer);showPopup(i);}
- },1000);
+// LOOP
+function animate(){
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera3D);
 }
+animate();
 
-function showPopup(i){
- popup.style.display="flex";
- if(videos[i].last){
-  popupText.textContent="आपने ₹2 कमा लिए हैं। रजिस्टर करें।";
-  popupBtn.textContent="रजिस्टर करें";
-  popupBtn.onclick=()=>{popup.style.display="none";registerPopup.style.display="flex";}
- }else{
-  popupText.textContent="आपने ₹2 कमा लिए हैं। अगला वीडियो देखें।";
-  popupBtn.textContent="अगला वीडियो";
-  popupBtn.onclick=()=>{popup.style.display="none";scrollToVideo(active+1);}
- }
-}
-
-function scrollToVideo(i){
- document.getElementById("video-"+i)?.scrollIntoView({behavior:"smooth"});
-}
 </script>
-
 </body>
 </html>
