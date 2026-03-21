@@ -1,25 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Hand VR Control</title>
+  <title>Hand Gesture 3D</title>
   <style>
     body { margin:0; overflow:hidden; background:black; }
-    video { display:none; }
+    canvas { display:block; }
   </style>
 </head>
 <body>
 
-<video id="video" autoplay playsinline></video>
+<video id="video" autoplay playsinline style="display:none;"></video>
 
 <script type="module">
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.158/build/three.module.js";
 import { Hands } from "https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js";
-import { Camera } from "https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js";
+
+// VIDEO
+const video = document.getElementById("video");
+
+// CAMERA FIX (WORKING)
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => {
+  video.srcObject = stream;
+  video.play();
+})
+.catch(err => {
+  alert("Camera error: " + err);
+});
 
 // THREE SETUP
 const scene = new THREE.Scene();
 const camera3D = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({ antialias:true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -35,27 +47,29 @@ let currentShape = "sphere";
 let lastPalmTime = 0;
 let lastPinch = false;
 
-// CREATE OBJECT
+// CREATE SHAPE
 function createShape(x, y) {
   let geometry;
+
   if(currentShape === "sphere"){
     geometry = new THREE.SphereGeometry(0.3, 32, 32);
   } else {
     geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
   }
 
-  const material = new THREE.MeshStandardMaterial({color: Math.random()*0xffffff});
+  const material = new THREE.MeshStandardMaterial({
+    color: Math.random()*0xffffff
+  });
+
   const mesh = new THREE.Mesh(geometry, material);
 
-  mesh.position.set((x-0.5)*5, -(y-0.5)*5, 0);
+  mesh.position.set((x-0.5)*6, -(y-0.5)*6, 0);
   scene.add(mesh);
 }
 
 // MEDIAPIPE
-const video = document.getElementById("video");
-
 const hands = new Hands({
-  locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+  locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
 });
 
 hands.setOptions({
@@ -71,7 +85,7 @@ hands.onResults(results => {
     const thumb = lm[4];
     const index = lm[8];
 
-    // PINCH DETECT
+    // PINCH
     const dist = Math.hypot(thumb.x - index.x, thumb.y - index.y);
     const isPinch = dist < 0.05;
 
@@ -80,7 +94,7 @@ hands.onResults(results => {
     }
     lastPinch = isPinch;
 
-    // OPEN PALM DETECT (simple: fingers spread)
+    // OPEN PALM
     const isOpenPalm =
       lm[8].y < lm[6].y &&
       lm[12].y < lm[10].y &&
@@ -89,22 +103,26 @@ hands.onResults(results => {
 
     if(isOpenPalm && Date.now() - lastPalmTime > 1500){
       currentShape = (currentShape === "sphere") ? "cube" : "sphere";
-      console.log("Switched to:", currentShape);
+      console.log("Switched:", currentShape);
       lastPalmTime = Date.now();
     }
   }
 });
 
-const cam = new Camera(video, {
-  onFrame: async () => {
-    await hands.send({image: video});
-  },
-  width: 640,
-  height: 480
-});
-cam.start();
+// LOOP (IMPORTANT FIX)
+async function detect(){
+  if(video.readyState >= 2){
+    await hands.send({ image: video });
+  }
+  requestAnimationFrame(detect);
+}
 
-// LOOP
+// START AFTER VIDEO READY
+video.onloadeddata = () => {
+  detect();
+};
+
+// RENDER LOOP
 function animate(){
   requestAnimationFrame(animate);
   renderer.render(scene, camera3D);
