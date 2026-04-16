@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Fake Gyro from Accelerometer</title>
+  <title>Air Mouse Test</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body{
@@ -29,17 +29,7 @@
       height:75vh;
       background:#222;
       overflow:hidden;
-    }
-    #center{
-      position:absolute;
-      width:14px;
-      height:14px;
-      background:white;
-      border-radius:50%;
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%);
-      opacity:0.5;
+      touch-action:none;
     }
     #dot{
       position:absolute;
@@ -56,27 +46,40 @@
 <body>
 
   <button onclick="startSensor()">Start</button>
-  <button onclick="setCenter()">Set Center</button>
+  <button onclick="setCenter()">Set Current Center</button>
+  <button onclick="resetDot()">Reset Dot</button>
 
-  <div id="info">x: 0 | y: 0</div>
+  <div id="info">dx: 0 | dy: 0</div>
 
   <div id="area">
-    <div id="center"></div>
     <div id="dot"></div>
   </div>
 
   <script>
     let rawX = 0, rawY = 0;
     let smoothX = 0, smoothY = 0;
-    let baseX = 0, baseY = 0;
+
+    // default slightly forward-tilted center
+    let baseX = 0;
+    let baseY = 3.0;
+
     let started = false;
 
-    const alpha = 0.12; // lower = smoother
-    const sensitivity = 35;
+    const alpha = 0.05;          // sensor smoothing
+    const deadzone = 0.35;       // ignore tiny movements
+    const speedFactor = 1.8;     // main speed
+    const maxSpeed = 18;         // cap
+    const friction = 0.88;       // lower = more stop, higher = more glide
 
     const dot = document.getElementById("dot");
     const info = document.getElementById("info");
     const area = document.getElementById("area");
+
+    let posX = window.innerWidth / 2;
+    let posY = window.innerHeight * 0.42;
+
+    let velX = 0;
+    let velY = 0;
 
     function startSensor(){
       if(started) return;
@@ -93,42 +96,73 @@
       } else {
         window.addEventListener("devicemotion", handleMotion);
       }
+
+      requestAnimationFrame(loop);
     }
 
     function handleMotion(e){
       rawX = e.accelerationIncludingGravity.x || 0;
       rawY = e.accelerationIncludingGravity.y || 0;
 
-      // smooth like fake gyro feel
-      smoothX = smoothX + (rawX - smoothX) * alpha;
-      smoothY = smoothY + (rawY - smoothY) * alpha;
+      smoothX += (rawX - smoothX) * alpha;
+      smoothY += (rawY - smoothY) * alpha;
+    }
 
+    function applyDeadzone(v){
+      if(Math.abs(v) < deadzone) return 0;
+      return v;
+    }
+
+    function clamp(val, min, max){
+      return Math.max(min, Math.min(max, val));
+    }
+
+    function loop(){
       let dx = smoothX - baseX;
       let dy = smoothY - baseY;
 
-      info.innerText = "x: " + dx.toFixed(2) + " | y: " + dy.toFixed(2);
+      dx = applyDeadzone(dx);
+      dy = applyDeadzone(dy);
 
-      let moveX = dx * sensitivity;
-      let moveY = dy * sensitivity;
+      // tilt -> speed
+      let targetVX = dx * speedFactor;
+      let targetVY = dy * speedFactor;
 
-      let centerX = area.clientWidth / 2;
-      let centerY = area.clientHeight / 2;
+      targetVX = clamp(targetVX, -maxSpeed, maxSpeed);
+      targetVY = clamp(targetVY, -maxSpeed, maxSpeed);
 
-      let finalX = centerX + moveX;
-      let finalY = centerY + moveY;
+      // smooth velocity
+      velX = velX * friction + targetVX * 0.18;
+      velY = velY * friction + targetVY * 0.18;
 
-      if(finalX < 0) finalX = 0;
-      if(finalX > area.clientWidth) finalX = area.clientWidth;
-      if(finalY < 0) finalY = 0;
-      if(finalY > area.clientHeight) finalY = area.clientHeight;
+      posX += velX;
+      posY += velY;
 
-      dot.style.left = finalX + "px";
-      dot.style.top = finalY + "px";
+      if(posX < 12){ posX = 12; velX = 0; }
+      if(posX > area.clientWidth - 12){ posX = area.clientWidth - 12; velX = 0; }
+
+      if(posY < 12){ posY = 12; velY = 0; }
+      if(posY > area.clientHeight - 12){ posY = area.clientHeight - 12; velY = 0; }
+
+      dot.style.left = posX + "px";
+      dot.style.top = posY + "px";
+
+      info.innerText =
+        "dx: " + dx.toFixed(2) + " | dy: " + dy.toFixed(2);
+
+      requestAnimationFrame(loop);
     }
 
     function setCenter(){
       baseX = smoothX;
       baseY = smoothY;
+    }
+
+    function resetDot(){
+      posX = area.clientWidth / 2;
+      posY = area.clientHeight / 2;
+      velX = 0;
+      velY = 0;
     }
   </script>
 
