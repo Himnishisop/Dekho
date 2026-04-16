@@ -125,7 +125,7 @@
       dy = applyDeadzone(dy);
 
       // tilt -> speed
-      let targetVX = dx * speedFactor;
+      let targetVX = -dx * speedFactor;
       let targetVY = dy * speedFactor;
 
       targetVX = clamp(targetVX, -maxSpeed, maxSpeed);
