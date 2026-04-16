@@ -59,17 +59,16 @@
     let rawX = 0, rawY = 0;
     let smoothX = 0, smoothY = 0;
 
-    // default slightly forward-tilted center
     let baseX = 0;
     let baseY = 3.0;
 
     let started = false;
 
-    const alpha = 0.05;          // sensor smoothing
-    const deadzone = 0.35;       // ignore tiny movements
-    const speedFactor = 1.8;     // main speed
-    const maxSpeed = 18;         // cap
-    const friction = 0.88;       // lower = more stop, higher = more glide
+    const alpha = 0.05;
+    const deadzone = 0.35;
+    const speedFactor = 1.8;
+    const maxSpeed = 18;
+    const friction = 0.88;
 
     const dot = document.getElementById("dot");
     const info = document.getElementById("info");
@@ -124,14 +123,13 @@
       dx = applyDeadzone(dx);
       dy = applyDeadzone(dy);
 
-      // tilt -> speed
+      // X inverted here
       let targetVX = -dx * speedFactor;
       let targetVY = dy * speedFactor;
 
       targetVX = clamp(targetVX, -maxSpeed, maxSpeed);
       targetVY = clamp(targetVY, -maxSpeed, maxSpeed);
 
-      // smooth velocity
       velX = velX * friction + targetVX * 0.18;
       velY = velY * friction + targetVY * 0.18;
 
@@ -147,8 +145,7 @@
       dot.style.left = posX + "px";
       dot.style.top = posY + "px";
 
-      info.innerText =
-        "dx: " + dx.toFixed(2) + " | dy: " + dy.toFixed(2);
+      info.innerText = "dx: " + dx.toFixed(2) + " | dy: " + dy.toFixed(2);
 
       requestAnimationFrame(loop);
     }
