@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tilt Pointer Test</title>
+  <title>Cursor Style Tilt Test</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body{
@@ -26,7 +26,7 @@
     #area{
       position:relative;
       width:100vw;
-      height:75vh;
+      height:78vh;
       background:#222;
       overflow:hidden;
     }
@@ -58,7 +58,7 @@
   <button onclick="startSensor()">Start</button>
   <button onclick="setCenter()">Set Center</button>
 
-  <div id="info">x: 0 | y: 0</div>
+  <div id="info">roll: 0 | pitch: 0</div>
 
   <div id="area">
     <div id="center"></div>
@@ -66,21 +66,21 @@
   </div>
 
   <script>
-    let rawX = 0, rawY = 0;
-    let smoothX = 0, smoothY = 0;
-
-    let baseX = 0;
-    let baseY = 3.0; // default forward tilt center
-
     let started = false;
 
-    const alpha = 0.08;       // smoothing
-    const sensitivity = 35;   // movement amount
-    const deadzone = 0.15;    // ignore tiny shake
+    let smoothRoll = 0;
+    let smoothPitch = 0;
 
+    let baseRoll = 0;
+    let basePitch = -18; // default slight forward tilt
+
+    const alpha = 0.12;     // smoothing
+    const maxAngle = 25;    // tilt needed to reach edges
+    const deadzone = 1.2;   // ignore tiny jitter
+
+    const area = document.getElementById("area");
     const dot = document.getElementById("dot");
     const info = document.getElementById("info");
-    const area = document.getElementById("area");
 
     function startSensor(){
       if(started) return;
@@ -99,40 +99,47 @@
       }
     }
 
+    function clamp(v, min, max){
+      return Math.max(min, Math.min(max, v));
+    }
+
     function handleMotion(e){
-      rawX = e.accelerationIncludingGravity.x || 0;
-      rawY = e.accelerationIncludingGravity.y || 0;
+      let ax = e.accelerationIncludingGravity.x || 0;
+      let ay = e.accelerationIncludingGravity.y || 0;
+      let az = e.accelerationIncludingGravity.z || 0;
 
-      smoothX += (rawX - smoothX) * alpha;
-      smoothY += (rawY - smoothY) * alpha;
+      // gravity -> tilt angles
+      let roll = Math.atan2(ax, az) * 180 / Math.PI;
+      let pitch = Math.atan2(ay, az) * 180 / Math.PI;
 
-      let dx = smoothX - baseX;
-      let dy = smoothY - baseY;
+      // smooth angles
+      smoothRoll += (roll - smoothRoll) * alpha;
+      smoothPitch += (pitch - smoothPitch) * alpha;
+
+      let dx = smoothRoll - baseRoll;
+      let dy = smoothPitch - basePitch;
 
       if (Math.abs(dx) < deadzone) dx = 0;
       if (Math.abs(dy) < deadzone) dy = 0;
 
-      // X inverted so right tilt = right move
-      let moveX = -dx * sensitivity;
-      let moveY = dy * sensitivity;
+      // normalize directly to screen position
+      let nx = clamp(dx / maxAngle, -1, 1);
+      let ny = clamp(dy / maxAngle, -1, 1);
 
-      let finalX = area.clientWidth / 2 + moveX;
-      let finalY = area.clientHeight / 2 + moveY;
-
-      if(finalX < 12) finalX = 12;
-      if(finalX > area.clientWidth - 12) finalX = area.clientWidth - 12;
-      if(finalY < 12) finalY = 12;
-      if(finalY > area.clientHeight - 12) finalY = area.clientHeight - 12;
+      // X inverted already
+      let finalX = area.clientWidth / 2 + (-nx) * (area.clientWidth / 2 - 20);
+      let finalY = area.clientHeight / 2 + (ny) * (area.clientHeight / 2 - 20);
 
       dot.style.left = finalX + "px";
       dot.style.top = finalY + "px";
 
-      info.innerText = "x: " + dx.toFixed(2) + " | y: " + dy.toFixed(2);
+      info.innerText =
+        "roll: " + dx.toFixed(1) + " | pitch: " + dy.toFixed(1);
     }
 
     function setCenter(){
-      baseX = smoothX;
-      baseY = smoothY;
+      baseRoll = smoothRoll;
+      basePitch = smoothPitch;
     }
   </script>
 
