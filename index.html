@@ -1,35 +1,138 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Accel Test</title>
+  <title>Accel Pointer Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #111;
+      color: white;
+      overflow: hidden;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 18px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+    }
+
+    #info {
+      margin-top: 15px;
+      font-size: 18px;
+    }
+
+    #area {
+      position: relative;
+      width: 100vw;
+      height: 75vh;
+      margin-top: 20px;
+      background: #222;
+      overflow: hidden;
+    }
+
+    #center {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: white;
+      border-radius: 50%;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0.5;
+    }
+
+    #dot {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: red;
+      border-radius: 50%;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+  </style>
 </head>
 <body>
 
-<button onclick="start()">Start</button>
-<p id="data">x: 0 | y: 0</p>
+  <button onclick="startSensor()">Start</button>
+  <button onclick="setCenter()">Set Current Position as Center</button>
 
-<script>
-function start() {
-  // iPhone permission fix
-  if (typeof DeviceMotionEvent.requestPermission === "function") {
-    DeviceMotionEvent.requestPermission().then(response => {
-      if (response === "granted") {
-        window.addEventListener("devicemotion", handle);
+  <div id="info">x: 0 | y: 0</div>
+
+  <div id="area">
+    <div id="center"></div>
+    <div id="dot"></div>
+  </div>
+
+  <script>
+    let baseX = 0;
+    let baseY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let started = false;
+
+    const dot = document.getElementById("dot");
+    const info = document.getElementById("info");
+    const area = document.getElementById("area");
+
+    function startSensor() {
+      if (started) return;
+      started = true;
+
+      if (typeof DeviceMotionEvent.requestPermission === "function") {
+        DeviceMotionEvent.requestPermission().then(response => {
+          if (response === "granted") {
+            window.addEventListener("devicemotion", handleMotion);
+          }
+        }).catch(err => {
+          alert("Permission denied");
+        });
+      } else {
+        window.addEventListener("devicemotion", handleMotion);
       }
-    });
-  } else {
-    window.addEventListener("devicemotion", handle);
-  }
-}
+    }
 
-function handle(e) {
-  let x = e.accelerationIncludingGravity.x;
-  let y = e.accelerationIncludingGravity.y;
+    function handleMotion(e) {
+      currentX = e.accelerationIncludingGravity.x || 0;
+      currentY = e.accelerationIncludingGravity.y || 0;
 
-  document.getElementById("data").innerText =
-    "x: " + x.toFixed(2) + " | y: " + y.toFixed(2);
-}
-</script>
+      let dx = currentX - baseX;
+      let dy = currentY - baseY;
+
+      info.innerText =
+        "x: " + dx.toFixed(2) + " | y: " + dy.toFixed(2);
+
+      let moveX = dx * 25;
+      let moveY = dy * 25;
+
+      let centerX = area.clientWidth / 2;
+      let centerY = area.clientHeight / 2;
+
+      let finalX = centerX + moveX;
+      let finalY = centerY + moveY;
+
+      if (finalX < 0) finalX = 0;
+      if (finalX > area.clientWidth) finalX = area.clientWidth;
+
+      if (finalY < 0) finalY = 0;
+      if (finalY > area.clientHeight) finalY = area.clientHeight;
+
+      dot.style.left = finalX + "px";
+      dot.style.top = finalY + "px";
+    }
+
+    function setCenter() {
+      baseX = currentX;
+      baseY = currentY;
+    }
+  </script>
 
 </body>
 </html>
