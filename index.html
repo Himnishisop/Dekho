@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Air Mouse Test</title>
+  <title>Tilt Pointer Test</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body{
@@ -29,7 +29,17 @@
       height:75vh;
       background:#222;
       overflow:hidden;
-      touch-action:none;
+    }
+    #center{
+      position:absolute;
+      width:12px;
+      height:12px;
+      background:white;
+      border-radius:50%;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      opacity:0.4;
     }
     #dot{
       position:absolute;
@@ -46,12 +56,12 @@
 <body>
 
   <button onclick="startSensor()">Start</button>
-  <button onclick="setCenter()">Set Current Center</button>
-  <button onclick="resetDot()">Reset Dot</button>
+  <button onclick="setCenter()">Set Center</button>
 
-  <div id="info">dx: 0 | dy: 0</div>
+  <div id="info">x: 0 | y: 0</div>
 
   <div id="area">
+    <div id="center"></div>
     <div id="dot"></div>
   </div>
 
@@ -60,25 +70,17 @@
     let smoothX = 0, smoothY = 0;
 
     let baseX = 0;
-    let baseY = 3.0;
+    let baseY = 3.0; // default forward tilt center
 
     let started = false;
 
-    const alpha = 0.05;
-    const deadzone = 0.35;
-    const speedFactor = 1.8;
-    const maxSpeed = 18;
-    const friction = 0.88;
+    const alpha = 0.08;       // smoothing
+    const sensitivity = 35;   // movement amount
+    const deadzone = 0.15;    // ignore tiny shake
 
     const dot = document.getElementById("dot");
     const info = document.getElementById("info");
     const area = document.getElementById("area");
-
-    let posX = window.innerWidth / 2;
-    let posY = window.innerHeight * 0.42;
-
-    let velX = 0;
-    let velY = 0;
 
     function startSensor(){
       if(started) return;
@@ -95,8 +97,6 @@
       } else {
         window.addEventListener("devicemotion", handleMotion);
       }
-
-      requestAnimationFrame(loop);
     }
 
     function handleMotion(e){
@@ -105,61 +105,34 @@
 
       smoothX += (rawX - smoothX) * alpha;
       smoothY += (rawY - smoothY) * alpha;
-    }
 
-    function applyDeadzone(v){
-      if(Math.abs(v) < deadzone) return 0;
-      return v;
-    }
-
-    function clamp(val, min, max){
-      return Math.max(min, Math.min(max, val));
-    }
-
-    function loop(){
       let dx = smoothX - baseX;
       let dy = smoothY - baseY;
 
-      dx = applyDeadzone(dx);
-      dy = applyDeadzone(dy);
+      if (Math.abs(dx) < deadzone) dx = 0;
+      if (Math.abs(dy) < deadzone) dy = 0;
 
-      // X inverted here
-      let targetVX = -dx * speedFactor;
-      let targetVY = dy * speedFactor;
+      // X inverted so right tilt = right move
+      let moveX = -dx * sensitivity;
+      let moveY = dy * sensitivity;
 
-      targetVX = clamp(targetVX, -maxSpeed, maxSpeed);
-      targetVY = clamp(targetVY, -maxSpeed, maxSpeed);
+      let finalX = area.clientWidth / 2 + moveX;
+      let finalY = area.clientHeight / 2 + moveY;
 
-      velX = velX * friction + targetVX * 0.18;
-      velY = velY * friction + targetVY * 0.18;
+      if(finalX < 12) finalX = 12;
+      if(finalX > area.clientWidth - 12) finalX = area.clientWidth - 12;
+      if(finalY < 12) finalY = 12;
+      if(finalY > area.clientHeight - 12) finalY = area.clientHeight - 12;
 
-      posX += velX;
-      posY += velY;
+      dot.style.left = finalX + "px";
+      dot.style.top = finalY + "px";
 
-      if(posX < 12){ posX = 12; velX = 0; }
-      if(posX > area.clientWidth - 12){ posX = area.clientWidth - 12; velX = 0; }
-
-      if(posY < 12){ posY = 12; velY = 0; }
-      if(posY > area.clientHeight - 12){ posY = area.clientHeight - 12; velY = 0; }
-
-      dot.style.left = posX + "px";
-      dot.style.top = posY + "px";
-
-      info.innerText = "dx: " + dx.toFixed(2) + " | dy: " + dy.toFixed(2);
-
-      requestAnimationFrame(loop);
+      info.innerText = "x: " + dx.toFixed(2) + " | y: " + dy.toFixed(2);
     }
 
     function setCenter(){
       baseX = smoothX;
       baseY = smoothY;
-    }
-
-    function resetDot(){
-      posX = area.clientWidth / 2;
-      posY = area.clientHeight / 2;
-      velX = 0;
-      velY = 0;
     }
   </script>
 
