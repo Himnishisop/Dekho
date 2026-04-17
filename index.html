@@ -1,147 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Cursor Style Tilt Test</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Right Click Test</title>
   <style>
-    body{
-      margin:0;
-      background:#111;
-      color:white;
-      font-family:Arial,sans-serif;
-      text-align:center;
-      overflow:hidden;
+    body {
+      font-family: Arial;
+      text-align: center;
+      margin-top: 100px;
     }
-    button{
-      margin:10px 6px;
-      padding:12px 18px;
-      font-size:16px;
-      border:none;
-      border-radius:10px;
-    }
-    #info{
-      font-size:18px;
-      margin-top:10px;
-    }
-    #area{
-      position:relative;
-      width:100vw;
-      height:78vh;
-      background:#222;
-      overflow:hidden;
-    }
-    #center{
-      position:absolute;
-      width:12px;
-      height:12px;
-      background:white;
-      border-radius:50%;
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%);
-      opacity:0.4;
-    }
-    #dot{
-      position:absolute;
-      width:24px;
-      height:24px;
-      background:red;
-      border-radius:50%;
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%);
+    #box {
+      font-size: 25px;
+      padding: 20px;
+      border: 2px solid black;
+      display: inline-block;
     }
   </style>
 </head>
 <body>
 
-  <button onclick="startSensor()">Start</button>
-  <button onclick="setCenter()">Set Center</button>
+<div id="box">Waiting...</div>
 
-  <div id="info">roll: 0 | pitch: 0</div>
+<script>
+let box = document.getElementById("box");
 
-  <div id="area">
-    <div id="center"></div>
-    <div id="dot"></div>
-  </div>
+// LEFT CLICK
+document.addEventListener("click", () => {
+  box.innerText = "LEFT CLICK DETECTED";
+});
 
-  <script>
-    let started = false;
+// RIGHT CLICK (BACK BUTTON TRAP)
+function setupBackTrap() {
+  history.pushState({test:1}, "", "");
+}
 
-    let smoothRoll = 0;
-    let smoothPitch = 0;
+window.addEventListener("popstate", () => {
+  box.innerText = "RIGHT CLICK (BACK) DETECTED";
+  
+  // re-add trap so it keeps working
+  setTimeout(() => {
+    history.pushState({test:1}, "", "");
+  }, 0);
+});
 
-    let baseRoll = 0;
-    let basePitch = -18; // default slight forward tilt
+// activate after first touch (important)
+document.addEventListener("click", setupBackTrap, { once: true });
+document.addEventListener("touchstart", setupBackTrap, { once: true });
 
-    const alpha = 0.12;     // smoothing
-    const maxAngle = 25;    // tilt needed to reach edges
-    const deadzone = 1.2;   // ignore tiny jitter
-
-    const area = document.getElementById("area");
-    const dot = document.getElementById("dot");
-    const info = document.getElementById("info");
-
-    function startSensor(){
-      if(started) return;
-      started = true;
-
-      if(typeof DeviceMotionEvent.requestPermission === "function"){
-        DeviceMotionEvent.requestPermission().then(response => {
-          if(response === "granted"){
-            window.addEventListener("devicemotion", handleMotion);
-          }
-        }).catch(() => {
-          alert("Permission denied");
-        });
-      } else {
-        window.addEventListener("devicemotion", handleMotion);
-      }
-    }
-
-    function clamp(v, min, max){
-      return Math.max(min, Math.min(max, v));
-    }
-
-    function handleMotion(e){
-      let ax = e.accelerationIncludingGravity.x || 0;
-      let ay = e.accelerationIncludingGravity.y || 0;
-      let az = e.accelerationIncludingGravity.z || 0;
-
-      // gravity -> tilt angles
-      let roll = Math.atan2(ax, az) * 180 / Math.PI;
-      let pitch = Math.atan2(ay, az) * 180 / Math.PI;
-
-      // smooth angles
-      smoothRoll += (roll - smoothRoll) * alpha;
-      smoothPitch += (pitch - smoothPitch) * alpha;
-
-      let dx = smoothRoll - baseRoll;
-      let dy = smoothPitch - basePitch;
-
-      if (Math.abs(dx) < deadzone) dx = 0;
-      if (Math.abs(dy) < deadzone) dy = 0;
-
-      // normalize directly to screen position
-      let nx = clamp(dx / maxAngle, -1, 1);
-      let ny = clamp(dy / maxAngle, -1, 1);
-
-      // X inverted already
-      let finalX = area.clientWidth / 2 + (-nx) * (area.clientWidth / 2 - 20);
-      let finalY = area.clientHeight / 2 + (ny) * (area.clientHeight / 2 - 20);
-
-      dot.style.left = finalX + "px";
-      dot.style.top = finalY + "px";
-
-      info.innerText =
-        "roll: " + dx.toFixed(1) + " | pitch: " + dy.toFixed(1);
-    }
-
-    function setCenter(){
-      baseRoll = smoothRoll;
-      basePitch = smoothPitch;
-    }
-  </script>
+</script>
 
 </body>
 </html>
