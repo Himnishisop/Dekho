@@ -1,134 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Popup Back Trap Test</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      text-align: center;
-      overflow: hidden;
-    }
-
-    #mainBox {
-      border: 2px solid #fff;
-      border-radius: 18px;
-      padding: 24px;
-      width: min(90vw, 520px);
-      font-size: 26px;
-      line-height: 1.4;
-    }
-
-    #small {
-      font-size: 15px;
-      opacity: 0.8;
-      margin-top: 10px;
-    }
-
-    /* invisible popup */
-    #ghostPopup {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0);
-      display: none;
-      pointer-events: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Back Button Context Menu Trap</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+        }
+        .info {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        /* Custom "Right Click" Menu */
+        #custom-menu {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 200px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        #custom-menu ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        #custom-menu li {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        #custom-menu li:hover {
+            background-color: #007bff;
+            color: white;
+        }
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.3);
+            z-index: 999;
+        }
+    </style>
 </head>
 <body>
 
-  <div id="mainBox">
-    Tap once to start
-    <div id="small">Then try repeated right click</div>
-  </div>
+    <div class="info">
+        <h1>The "Back" Trap</h1>
+        <p>Press your right-click (Back) button to trigger the menu.</p>
+    </div>
 
-  <div id="ghostPopup"></div>
+    <div id="overlay"></div>
+    <div id="custom-menu">
+        <ul>
+            <li onclick="alert('Action: Refresh')">Refresh Page</li>
+            <li onclick="alert('Action: Save')">Save As...</li>
+            <li onclick="alert('Action: Inspect')">Inspect</li>
+            <li onclick="closeMenu()" style="color: red;">Close Menu</li>
+        </ul>
+    </div>
 
-  <script>
-    const mainBox = document.getElementById("mainBox");
-    const small = document.getElementById("small");
-    const ghostPopup = document.getElementById("ghostPopup");
+    <script>
+        // 1. Initialize the trap by pushing a dummy state
+        window.history.pushState({ trap: true }, null, window.location.href);
 
-    let armed = false;
-    let popupOpen = false;
-    let count = 0;
-    let reopening = false;
+        // 2. Intercept the Back Button event
+        window.onpopstate = function (event) {
+            // Immediately re-push the state to stay on this page
+            window.history.pushState({ trap: true }, null, window.location.href);
+            
+            // 3. Show your custom "Right Click" menu
+            showMenu();
+        };
 
-    function show(text, sub = "") {
-      mainBox.innerHTML = `${text}<div id="small">${sub}</div>`;
-    }
+        const menu = document.getElementById('custom-menu');
+        const overlay = document.getElementById('overlay');
 
-    function openPopup(push = true) {
-      popupOpen = true;
-      ghostPopup.style.display = "block";
+        function showMenu() {
+            menu.style.display = 'block';
+            overlay.style.display = 'block';
+        }
 
-      if (push) {
-        history.pushState({ popup: "open", t: Date.now() }, "", location.href);
-      }
+        function closeMenu() {
+            menu.style.display = 'none';
+            overlay.style.display = 'none';
+        }
 
-      show("POPUP OPEN", `Back count: ${count}`);
-    }
-
-    function closePopup() {
-      popupOpen = false;
-      ghostPopup.style.display = "none";
-      show("RIGHT CLICK DETECTED", `Back count: ${count}`);
-    }
-
-    function armSystem() {
-      if (armed) return;
-      armed = true;
-
-      // clean base
-      history.replaceState({ base: true }, "", location.href);
-
-      // open first popup
-      openPopup(true);
-
-      show("SYSTEM ARMED", "Now try right click");
-    }
-
-    function handleBackSignal() {
-      if (!armed) return;
-      if (reopening) return;
-
-      count++;
-      closePopup();
-
-      reopening = true;
-
-      setTimeout(() => {
-        openPopup(true);
-        reopening = false;
-      }, 10);
-    }
-
-    window.addEventListener("popstate", () => {
-      handleBackSignal();
-    });
-
-    document.addEventListener("click", () => {
-      if (!armed) {
-        armSystem();
-      } else {
-        show("LEFT CLICK DETECTED", `Back count: ${count}`);
-      }
-    });
-
-    ["touchstart", "pointerdown", "keydown"].forEach(evt => {
-      window.addEventListener(evt, () => {
-        if (!armed) armSystem();
-      }, { once: true });
-    });
-  </script>
-
+        // Close menu if user clicks the dark background
+        overlay.onclick = closeMenu;
+    </script>
 </body>
 </html>
