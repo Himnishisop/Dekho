@@ -78,33 +78,39 @@
     </div>
 
     <script>
-        // 1. Initialize the trap by pushing a dummy state
-        window.history.pushState({ trap: true }, null, window.location.href);
+        // 1. Function to prime the history trap
+function primeTrap() {
+    // We add a unique 'id' to each push so the browser treats it as a new step
+    window.history.pushState({ trapId: Date.now() }, null, window.location.href);
+}
 
-        // 2. Intercept the Back Button event
-        window.onpopstate = function (event) {
-            // Immediately re-push the state to stay on this page
-            window.history.pushState({ trap: true }, null, window.location.href);
-            
-            // 3. Show your custom "Right Click" menu
-            showMenu();
-        };
+// Initial prime on page load
+primeTrap();
 
-        const menu = document.getElementById('custom-menu');
-        const overlay = document.getElementById('overlay');
+// 2. Intercept the Back Button event
+window.onpopstate = function (event) {
+    // A. Re-prime the trap immediately so it works again next time
+    primeTrap();
+    
+    // B. Trigger your menu
+    showMenu();
+};
 
-        function showMenu() {
-            menu.style.display = 'block';
-            overlay.style.display = 'block';
-        }
+const menu = document.getElementById('custom-menu');
+const overlay = document.getElementById('overlay');
 
-        function closeMenu() {
-            menu.style.display = 'none';
-            overlay.style.display = 'none';
-        }
+function showMenu() {
+    menu.style.display = 'block';
+    overlay.style.display = 'block';
+}
 
-        // Close menu if user clicks the dark background
-        overlay.onclick = closeMenu;
+function closeMenu() {
+    menu.style.display = 'none';
+    overlay.style.display = 'none';
+}
+
+overlay.onclick = closeMenu;
+
     </script>
 </body>
 </html>
