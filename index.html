@@ -1,94 +1,111 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Right Click Back Test</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Continuous Right Click Trap</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      text-align: center;
-      padding: 20px;
-      box-sizing: border-box;
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#111;
+      color:#fff;
+      font-family:Arial,sans-serif;
+      text-align:center;
+      padding:20px;
+      box-sizing:border-box;
     }
-
-    #box {
-      border: 2px solid #fff;
-      padding: 24px;
-      border-radius: 16px;
-      max-width: 500px;
-      width: 100%;
-      font-size: 24px;
-      line-height: 1.5;
+    #box{
+      border:2px solid #fff;
+      border-radius:18px;
+      padding:24px;
+      max-width:520px;
+      width:100%;
+      font-size:26px;
+      line-height:1.4;
     }
-
-    .small {
-      font-size: 16px;
-      opacity: 0.8;
-      margin-top: 12px;
+    .small{
+      margin-top:12px;
+      font-size:15px;
+      opacity:.8;
     }
   </style>
 </head>
 <body>
-
   <div id="box">
-    Waiting for input...
-    <div class="small">First tap once to arm the trap</div>
+    Tap once to arm trap
+    <div class="small">Then try repeated right clicks</div>
   </div>
 
   <script>
     const box = document.getElementById("box");
     let armed = false;
-    let backCount = 0;
+    let rightCount = 0;
+    let fillLock = false;
 
-    function log(msg) {
-      box.innerHTML = msg + `<div class="small">Back count: ${backCount}</div>`;
+    function show(msg){
+      box.innerHTML = msg + `<div class="small">Right count: ${rightCount}</div>`;
     }
 
-    function fillHistoryTrap() {
-      // Keep two fake states ahead so repeated back presses stay inside page
-      history.pushState({ trap: 1, step: 1, t: Date.now() }, "", location.href);
-      history.pushState({ trap: 1, step: 2, t: Date.now() + 1 }, "", location.href);
+    function fillTrap(amount = 6){
+      if (fillLock) return;
+      fillLock = true;
+
+      for(let i = 0; i < amount; i++){
+        history.pushState(
+          { trap: true, n: i, t: Date.now() + i },
+          "",
+          location.href
+        );
+      }
+
+      setTimeout(() => {
+        fillLock = false;
+      }, 30);
     }
 
-    function armTrap() {
+    function armTrap(){
       if (armed) return;
       armed = true;
-      fillHistoryTrap();
-      log("Trap armed. Now try right click.");
+
+      // make current page a controlled base state
+      history.replaceState({ base: true }, "", location.href);
+
+      // preload multiple fake states
+      fillTrap(8);
+
+      show("Trap armed. Keep right clicking.");
     }
 
-    // Left click / normal tap test
-    document.addEventListener("click", () => {
-      if (!armed) {
-        armTrap();
-      } else {
-        log("LEFT CLICK DETECTED");
-      }
-    });
-
-    // Right click/back detection
-    window.addEventListener("popstate", () => {
-      backCount++;
-      log("RIGHT CLICK (BACK) DETECTED");
-
-      // refill trap immediately
+    function refillSoon(){
       setTimeout(() => {
-        fillHistoryTrap();
+        fillTrap(4);
       }, 0);
+    }
+
+    window.addEventListener("popstate", (e) => {
+      if (!armed) return;
+
+      rightCount++;
+      show("RIGHT CLICK DETECTED");
+
+      // refill immediately after every back
+      refillSoon();
     });
 
-    // Also arm on first touch/pointer/keydown in case browser wants interaction first
-    ["touchstart", "pointerdown", "keydown"].forEach(evt => {
+    // arm from first real interaction
+    ["pointerdown", "touchstart", "click", "keydown"].forEach(evt => {
       window.addEventListener(evt, armTrap, { once: true });
     });
-  </script>
 
+    // normal left click display
+    document.addEventListener("click", () => {
+      if (armed) {
+        show("LEFT CLICK DETECTED");
+      }
+    });
+  </script>
 </body>
 </html>
