@@ -1,110 +1,134 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Back Trap Test</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Popup Back Trap Test</title>
   <style>
-    body{
-      margin:0;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:#111;
-      color:#fff;
-      font-family:Arial,sans-serif;
-      text-align:center;
-      padding:20px;
-      box-sizing:border-box;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      overflow: hidden;
     }
-    #box{
-      border:2px solid #fff;
-      border-radius:18px;
-      padding:24px;
-      max-width:520px;
-      width:100%;
-      font-size:26px;
-      line-height:1.4;
+
+    #mainBox {
+      border: 2px solid #fff;
+      border-radius: 18px;
+      padding: 24px;
+      width: min(90vw, 520px);
+      font-size: 26px;
+      line-height: 1.4;
     }
-    .small{
-      margin-top:12px;
-      font-size:15px;
-      opacity:.8;
+
+    #small {
+      font-size: 15px;
+      opacity: 0.8;
+      margin-top: 10px;
+    }
+
+    /* invisible popup */
+    #ghostPopup {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0);
+      display: none;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
-  <div id="box">
-    Tap once to arm
-    <div class="small">Then try repeated right click</div>
+
+  <div id="mainBox">
+    Tap once to start
+    <div id="small">Then try repeated right click</div>
   </div>
 
-<script>
-const box = document.getElementById("box");
-let armed = false;
-let count = 0;
-const TRAP_HASH = "#trap-active";
+  <div id="ghostPopup"></div>
 
-function show(msg){
-  box.innerHTML = msg + `<div class="small">Back count: ${count}</div>`;
-}
+  <script>
+    const mainBox = document.getElementById("mainBox");
+    const small = document.getElementById("small");
+    const ghostPopup = document.getElementById("ghostPopup");
 
-function ensureTrap(){
-  if (location.hash !== TRAP_HASH) {
-    location.hash = TRAP_HASH;
-  }
-}
+    let armed = false;
+    let popupOpen = false;
+    let count = 0;
+    let reopening = false;
 
-function arm(){
-  if (armed) return;
-  armed = true;
+    function show(text, sub = "") {
+      mainBox.innerHTML = `${text}<div id="small">${sub}</div>`;
+    }
 
-  // base + trap
-  history.replaceState({base:true}, "", location.pathname + location.search);
-  ensureTrap();
+    function openPopup(push = true) {
+      popupOpen = true;
+      ghostPopup.style.display = "block";
 
-  // extra state for safety
-  history.pushState({armed:true}, "", location.href);
+      if (push) {
+        history.pushState({ popup: "open", t: Date.now() }, "", location.href);
+      }
 
-  show("Trap armed. Try repeated right click.");
-}
+      show("POPUP OPEN", `Back count: ${count}`);
+    }
 
-function onBackDetected(){
-  count++;
-  show("RIGHT CLICK / BACK DETECTED");
+    function closePopup() {
+      popupOpen = false;
+      ghostPopup.style.display = "none";
+      show("RIGHT CLICK DETECTED", `Back count: ${count}`);
+    }
 
-  // immediately restore trap
-  setTimeout(() => {
-    ensureTrap();
-    history.pushState({armed:true, t:Date.now()}, "", location.href);
-  }, 0);
-}
+    function armSystem() {
+      if (armed) return;
+      armed = true;
 
-window.addEventListener("hashchange", () => {
-  if (!armed) return;
+      // clean base
+      history.replaceState({ base: true }, "", location.href);
 
-  // when back removes #trap-active
-  if (location.hash !== TRAP_HASH) {
-    onBackDetected();
-  }
-});
+      // open first popup
+      openPopup(true);
 
-window.addEventListener("popstate", () => {
-  if (!armed) return;
-  onBackDetected();
-});
+      show("SYSTEM ARMED", "Now try right click");
+    }
 
-document.addEventListener("click", () => {
-  if (!armed) {
-    arm();
-  } else {
-    show("LEFT CLICK DETECTED");
-  }
-});
+    function handleBackSignal() {
+      if (!armed) return;
+      if (reopening) return;
 
-["touchstart","pointerdown","keydown"].forEach(evt => {
-  window.addEventListener(evt, arm, { once:true });
-});
-</script>
+      count++;
+      closePopup();
+
+      reopening = true;
+
+      setTimeout(() => {
+        openPopup(true);
+        reopening = false;
+      }, 10);
+    }
+
+    window.addEventListener("popstate", () => {
+      handleBackSignal();
+    });
+
+    document.addEventListener("click", () => {
+      if (!armed) {
+        armSystem();
+      } else {
+        show("LEFT CLICK DETECTED", `Back count: ${count}`);
+      }
+    });
+
+    ["touchstart", "pointerdown", "keydown"].forEach(evt => {
+      window.addEventListener(evt, () => {
+        if (!armed) armSystem();
+      }, { once: true });
+    });
+  </script>
+
 </body>
 </html>
