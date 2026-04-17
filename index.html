@@ -3,47 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infinite Click Detector</title>
+    <title>High-Speed Trap</title>
     <style>
-        body { background: #000; color: #0f0; font-family: monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-        #status { border: 2px solid #0f0; padding: 20px; border-radius: 10px; font-size: 1.5rem; }
+        body { background: #111; color: #0f0; font-family: monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        #counter { font-size: 5rem; text-shadow: 0 0 10px #0f0; }
     </style>
 </head>
 <body>
 
-    <div id="status">
-        <p>TAP SCREEN TO ARM</p>
-        <h1 id="counter">0</h1>
-    </div>
+    <div id="counter">0</div>
 
     <script>
         let count = 0;
+        const display = document.getElementById('counter');
 
-        // This function forces the browser to stay on the current "anchor"
-        function reArm() {
-            window.location.hash = "trap";
-            window.location.hash = "!"; // Forces a change the browser must track
+        // Fast arming function
+        function arm() {
+            // Use a simple, short hash to minimize URL processing
+            window.history.pushState(null, null, "#!");
         }
 
-        // Detect the back button via hash change
-        window.onhashchange = function() {
-            count++;
-            document.getElementById('counter').innerText = count;
+        // Initial arm
+        arm();
+
+        // High-speed intercept
+        window.addEventListener('popstate', function() {
+            // 1. Immediately re-arm (before doing anything else)
+            arm();
             
-            // Immediately force the URL back to our "trap" anchor
-            reArm();
-        };
+            // 2. Run the logic
+            count++;
+            display.innerText = count;
+            
+            // 3. Optional: Add a tiny vibration if your phone supports it
+            if (navigator.vibrate) navigator.vibrate(10); 
+        });
 
-        // Initialize on first tap
-        window.onclick = function() {
-            reArm();
-            document.querySelector('p').innerText = "TRAP ARMED: RIGHT-CLICK NOW";
-        };
-
-        // Backup: Standard popstate intercept
-        window.onpopstate = function() {
-            reArm();
-        };
+        // Activate on first touch
+        window.onclick = arm;
     </script>
 </body>
 </html>
