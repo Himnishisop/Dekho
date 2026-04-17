@@ -3,49 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Back Trap</title>
+    <title>Infinite Click Detector</title>
     <style>
         body { background: #000; color: #0f0; font-family: monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-        #status { border: 2px solid #0f0; padding: 20px; border-radius: 10px; }
+        #status { border: 2px solid #0f0; padding: 20px; border-radius: 10px; font-size: 1.5rem; }
     </style>
 </head>
 <body>
 
     <div id="status">
-        <h2>TRAP ACTIVE</h2>
-        <p>Click anywhere on the screen first to "activate" the browser's permission.</p>
+        <p>TAP SCREEN TO ARM</p>
         <h1 id="counter">0</h1>
     </div>
 
     <script>
-        let clicks = 0;
+        let count = 0;
 
-        function armTrap() {
-            // Push a new state to history
-            window.history.pushState({ trap: Date.now() }, null, window.location.href);
-            // Also force the browser forward if it tries to slip away
-            window.history.forward();
+        // This function forces the browser to stay on the current "anchor"
+        function reArm() {
+            window.location.hash = "trap";
+            window.location.hash = "!"; // Forces a change the browser must track
         }
 
-        // Initialize
-        armTrap();
-
-        // Detect Back/Right-Click
-        window.onpopstate = function() {
-            clicks++;
-            document.getElementById('counter').innerText = clicks;
+        // Detect the back button via hash change
+        window.onhashchange = function() {
+            count++;
+            document.getElementById('counter').innerText = count;
             
-            // Re-arm immediately
-            armTrap();
-            
-            console.log("Back button intercept #" + clicks);
+            // Immediately force the URL back to our "trap" anchor
+            reArm();
         };
 
-        // Important: Most mobile browsers require at least one 
-        // real touch to allow history manipulation.
+        // Initialize on first tap
         window.onclick = function() {
-            console.log("User gesture detected. Trap fully armed.");
-            armTrap();
+            reArm();
+            document.querySelector('p').innerText = "TRAP ARMED: RIGHT-CLICK NOW";
+        };
+
+        // Backup: Standard popstate intercept
+        window.onpopstate = function() {
+            reArm();
         };
     </script>
 </body>
