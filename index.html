@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Continuous Right Click Trap</title>
+  <title>Back Trap Test</title>
   <style>
     body{
       margin:0;
@@ -35,77 +35,76 @@
 </head>
 <body>
   <div id="box">
-    Tap once to arm trap
-    <div class="small">Then try repeated right clicks</div>
+    Tap once to arm
+    <div class="small">Then try repeated right click</div>
   </div>
 
-  <script>
-    const box = document.getElementById("box");
-    let armed = false;
-    let rightCount = 0;
-    let fillLock = false;
+<script>
+const box = document.getElementById("box");
+let armed = false;
+let count = 0;
+const TRAP_HASH = "#trap-active";
 
-    function show(msg){
-      box.innerHTML = msg + `<div class="small">Right count: ${rightCount}</div>`;
-    }
+function show(msg){
+  box.innerHTML = msg + `<div class="small">Back count: ${count}</div>`;
+}
 
-    function fillTrap(amount = 6){
-      if (fillLock) return;
-      fillLock = true;
+function ensureTrap(){
+  if (location.hash !== TRAP_HASH) {
+    location.hash = TRAP_HASH;
+  }
+}
 
-      for(let i = 0; i < amount; i++){
-        history.pushState(
-          { trap: true, n: i, t: Date.now() + i },
-          "",
-          location.href
-        );
-      }
+function arm(){
+  if (armed) return;
+  armed = true;
 
-      setTimeout(() => {
-        fillLock = false;
-      }, 30);
-    }
+  // base + trap
+  history.replaceState({base:true}, "", location.pathname + location.search);
+  ensureTrap();
 
-    function armTrap(){
-      if (armed) return;
-      armed = true;
+  // extra state for safety
+  history.pushState({armed:true}, "", location.href);
 
-      // make current page a controlled base state
-      history.replaceState({ base: true }, "", location.href);
+  show("Trap armed. Try repeated right click.");
+}
 
-      // preload multiple fake states
-      fillTrap(8);
+function onBackDetected(){
+  count++;
+  show("RIGHT CLICK / BACK DETECTED");
 
-      show("Trap armed. Keep right clicking.");
-    }
+  // immediately restore trap
+  setTimeout(() => {
+    ensureTrap();
+    history.pushState({armed:true, t:Date.now()}, "", location.href);
+  }, 0);
+}
 
-    function refillSoon(){
-      setTimeout(() => {
-        fillTrap(4);
-      }, 0);
-    }
+window.addEventListener("hashchange", () => {
+  if (!armed) return;
 
-    window.addEventListener("popstate", (e) => {
-      if (!armed) return;
+  // when back removes #trap-active
+  if (location.hash !== TRAP_HASH) {
+    onBackDetected();
+  }
+});
 
-      rightCount++;
-      show("RIGHT CLICK DETECTED");
+window.addEventListener("popstate", () => {
+  if (!armed) return;
+  onBackDetected();
+});
 
-      // refill immediately after every back
-      refillSoon();
-    });
+document.addEventListener("click", () => {
+  if (!armed) {
+    arm();
+  } else {
+    show("LEFT CLICK DETECTED");
+  }
+});
 
-    // arm from first real interaction
-    ["pointerdown", "touchstart", "click", "keydown"].forEach(evt => {
-      window.addEventListener(evt, armTrap, { once: true });
-    });
-
-    // normal left click display
-    document.addEventListener("click", () => {
-      if (armed) {
-        show("LEFT CLICK DETECTED");
-      }
-    });
-  </script>
+["touchstart","pointerdown","keydown"].forEach(evt => {
+  window.addEventListener(evt, arm, { once:true });
+});
+</script>
 </body>
 </html>
