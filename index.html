@@ -1,46 +1,269 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>High-Speed Trap</title>
-    <style>
-        body { background: #111; color: #0f0; font-family: monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        #counter { font-size: 5rem; text-shadow: 0 0 10px #0f0; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drake Remastered Ultimate</title>
+  <style>
+    :root{
+      --bg:#0f1115;
+      --panel:#151923;
+      --panel2:#171b24;
+      --text:#ffffff;
+      --muted:#9fd3ff;
+      --green:#00ff88;
+      --blue:#2d6cdf;
+      --gray:#2b2f3a;
+      --border:#2a3140;
+      --warn:#ffd37a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:Arial,Helvetica,sans-serif;
+    }
+    .topbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      padding:14px;
+      position:sticky;
+      top:0;
+      background:var(--panel);
+      z-index:20;
+      border-bottom:1px solid var(--border);
+    }
+    button{
+      border:none;
+      padding:12px 16px;
+      border-radius:10px;
+      background:var(--blue);
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
+    }
+    button.secondary{ background:var(--gray); }
+    #status{
+      padding:0 14px 12px;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:1.2fr 0.8fr;
+      gap:14px;
+      padding:0 14px 14px;
+    }
+    .card{
+      background:var(--panel2);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:14px;
+    }
+    .title{
+      font-size:15px;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+    .badge{
+      display:inline-block;
+      padding:4px 8px;
+      border-radius:999px;
+      background:#222838;
+      margin-right:6px;
+      margin-bottom:6px;
+      font-size:12px;
+    }
+    #debug{
+      height:340px;
+      overflow:auto;
+      white-space:pre-wrap;
+      background:#000;
+      color:var(--green);
+      border-radius:12px;
+      border:1px solid #243;
+      font-family:Consolas,monospace;
+      font-size:13px;
+      padding:12px;
+      margin-top:10px;
+    }
+    #playerWrap{
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+      background:#000;
+      min-height:280px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    #player{
+      width:100%;
+      max-width:100%;
+      height:280px;
+    }
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .mini{
+      font-size:13px;
+      line-height:1.5;
+      color:#d5d9e3;
+    }
+    .kv{
+      display:grid;
+      grid-template-columns:140px 1fr;
+      gap:8px;
+      margin-top:8px;
+      font-size:14px;
+    }
+    input[type="range"]{
+      width:100%;
+    }
+    #nowPlaying{
+      color:var(--warn);
+      font-weight:700;
+      margin-top:10px;
+      min-height:20px;
+    }
+    #voiceIndicator{
+      color:#9cff9c;
+      font-weight:700;
+      min-height:20px;
+    }
+    @media (max-width:900px){
+      .grid{grid-template-columns:1fr}
+      #player{height:220px}
+    }
+  </style>
 </head>
 <body>
 
-    <div id="counter">0</div>
+  <div class="topbar">
+    <button onclick="connectBLE()">CONNECT LIGHT</button>
+    <button onclick="armMedia()">ARM AUDIO</button>
+    <button onclick="startVoice()">START VOICE</button>
+    <button class="secondary" onclick="stopVoice()">STOP VOICE</button>
+    <button class="secondary" onclick="stopMusic()">STOP MUSIC</button>
+    <button class="secondary" onclick="testRed()">TEST RED</button>
+    <button class="secondary" onclick="setLight(0,0,255)">TEST BLUE</button>
+    <button class="secondary" onclick="setLight(255,255,255)">TEST WHITE</button>
+    <button class="secondary" onclick="clearDebug()">CLEAR DEBUG</button>
+  </div>
 
-    <script>
-        let count = 0;
-        const display = document.getElementById('counter');
+  <div id="status">idle</div>
 
-        // Fast arming function
-        function arm() {
-            // Use a simple, short hash to minimize URL processing
-            window.history.pushState(null, null, "#!");
-        }
+  <div class="grid">
+    <div class="card">
+      <div class="title">Player</div>
+      <div id="playerWrap">
+        <div id="player"></div>
+      </div>
+      <div id="nowPlaying">Nothing playing</div>
+      <div class="row">
+        <button class="secondary" onclick="setPlayerVolume(20)">VOL 20</button>
+        <button class="secondary" onclick="setPlayerVolume(50)">VOL 50</button>
+        <button class="secondary" onclick="setPlayerVolume(100)">VOL 100</button>
+      </div>
+      <div class="row">
+        <div style="flex:1;min-width:220px">
+          <input id="volSlider" type="range" min="0" max="100" value="50" oninput="setPlayerVolume(this.value)">
+        </div>
+      </div>
+    </div>
 
-        // Initial arm
-        arm();
+    <div class="card">
+      <div class="title">Status</div>
+      <span class="badge">Wake: drake / drink / break / dark / dre</span>
+      <span class="badge">BLE: CLK</span>
+      <span class="badge">Music: YouTube</span>
+      <span class="badge">Stop only</span>
+      <div class="kv">
+        <div>Voice</div><div id="voiceIndicator">stopped</div>
+        <div>BLE</div><div id="bleState">not connected</div>
+        <div>Audio Arm</div><div id="armState">not armed</div>
+        <div>Volume</div><div id="volState">50</div>
+      </div>
+      <div class="mini" style="margin-top:12px">
+        Example commands:<br>
+        <b>Drake play god's plan</b><br>
+        <b>Drake play naksha</b><br>
+        <b>Drake stop music</b><br>
+        <b>Drake set light red</b><br>
+        <b>Drake blue light</b><br>
+        <b>Drake brightness 30</b><br>
+        <b>Drake what is photosynthesis</b>
+      </div>
+    </div>
+  </div>
 
-        // High-speed intercept
-        window.addEventListener('popstate', function() {
-            // 1. Immediately re-arm (before doing anything else)
-            arm();
-            
-            // 2. Run the logic
-            count++;
-            display.innerText = count;
-            
-            // 3. Optional: Add a tiny vibration if your phone supports it
-            if (navigator.vibrate) navigator.vibrate(10); 
-        });
+  <div class="card" style="margin:0 14px 14px">
+    <div class="title">Debug</div>
+    <pre id="debug"></pre>
+  </div>
 
-        // Activate on first touch
-        window.onclick = arm;
-    </script>
-</body>
-</html>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    // =========================
+    // CONFIG
+    // =========================
+    const MISTRAL_API_KEY = "sb4uBrl67jk1RV2gg1gLZqh2lkoSq3Py";
+    const YT_API_KEY = "AIzaSyBW9ylko1FTzfvco2NShiRE4lkI29fP7tc";
+
+    const DEVICE_NAME = "CLK";
+    const SERVICE_UUID = "0000fff0-0000-1000-8000-00805f9b34fb";
+    const CHAR_UUID = "0000fff3-0000-1000-8000-00805f9b34fb";
+    const WAKE_WORDS = ["drake","drink","break","dark","dre"];
+
+    // =========================
+    // STATE
+    // =========================
+    let bleChar = null;
+    let bleDevice = null;
+
+    let recognition = null;
+    let manuallyStoppedVoice = false;
+    let handlingSpeech = false;
+    let lastCommandAt = 0;
+    let restartTimer = null;
+
+    let ytPlayer = null;
+    let ytReady = false;
+    let mediaArmed = false;
+    let currentVolume = 50;
+    let currentVideo = null;
+
+    // =========================
+    // UI HELPERS
+    // =========================
+    function log(msg){
+      const box = document.getElementById("debug");
+      const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      box.textContent += line + "\n";
+      box.scrollTop = box.scrollHeight;
+      console.log(line);
+    }
+
+    function clearDebug(){
+      document.getElementById("debug").textContent = "";
+    }
+
+    function setStatus(text){
+      document.getElementById("status").innerText = text;
+    }
+
+    function setVoiceIndicator(text){
+      document.getElementById("voiceIndicator").innerText = text;
+    }
+
+    function setBleState(text){
+      document.getElementById("bleState").innerText = text;
+    }
+
+    function setArmState(text){
+      document.getElement
