@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Drake Remastered Ultimate</title>
+
   <style>
     :root{
       --bg:#0f1115;
       --panel:#151923;
-      --panel-2:#1a1f2b;
-      --panel-3:#10141c;
+      --panel2:#1a1f2b;
       --border:#2a3140;
       --text:#ffffff;
       --muted:#9fd3ff;
@@ -17,7 +17,6 @@
       --blue:#2d6cdf;
       --gray:#2b2f3a;
       --yellow:#ffd166;
-      --red:#ff7b7b;
     }
 
     *{box-sizing:border-box}
@@ -51,13 +50,8 @@
       cursor:pointer;
     }
 
-    button.secondary{
-      background:var(--gray);
-    }
-
-    button.warn{
-      background:#8b2c2c;
-    }
+    button.secondary{background:var(--gray)}
+    button.stop{background:#7d2525}
 
     #status{
       padding:12px 14px 0;
@@ -73,7 +67,7 @@
     }
 
     .card{
-      background:var(--panel-2);
+      background:var(--panel2);
       border:1px solid var(--border);
       border-radius:14px;
       padding:14px;
@@ -123,24 +117,12 @@
       font-size:14px;
     }
 
-    .mini{
-      color:#d5d9e3;
-      line-height:1.5;
-      font-size:13px;
-    }
-
     #nowPlaying{
       color:var(--yellow);
       font-weight:700;
       margin-top:12px;
       min-height:20px;
       word-break:break-word;
-    }
-
-    #voiceIndicator,
-    #bleIndicator,
-    #audioIndicator{
-      font-weight:700;
     }
 
     #debug{
@@ -171,14 +153,12 @@
       padding:12px;
       border-radius:10px;
       border:1px solid var(--border);
-      background:var(--panel-3);
+      background:#10141c;
       color:#fff;
       outline:none;
     }
 
-    input[type="range"]{
-      width:100%;
-    }
+    input[type="range"]{width:100%}
 
     .examples{
       margin-top:10px;
@@ -187,16 +167,13 @@
       line-height:1.6;
     }
 
-    @media (max-width:900px){
-      .layout{
-        grid-template-columns:1fr;
-      }
-      #player{
-        height:220px;
-      }
+    @media(max-width:900px){
+      .layout{grid-template-columns:1fr}
+      #player{height:220px}
     }
   </style>
 </head>
+
 <body>
 
   <div class="topbar">
@@ -204,7 +181,7 @@
     <button onclick="armAudio()">ARM AUDIO</button>
     <button onclick="startVoice()">START VOICE</button>
     <button class="secondary" onclick="stopVoice()">STOP VOICE</button>
-    <button class="warn" onclick="stopMusic()">STOP MUSIC</button>
+    <button class="stop" onclick="stopMusic()">STOP MUSIC</button>
     <button class="secondary" onclick="setLightSafe(255,0,0)">RED</button>
     <button class="secondary" onclick="setLightSafe(0,0,255)">BLUE</button>
     <button class="secondary" onclick="setLightSafe(255,255,255)">WHITE</button>
@@ -216,6 +193,7 @@
   <div class="layout">
     <div class="card">
       <div class="title">Music Player</div>
+
       <div id="playerWrap">
         <div id="player"></div>
       </div>
@@ -229,24 +207,22 @@
       </div>
 
       <div class="row">
-        <div style="width:100%">
-          <input id="volumeSlider" type="range" min="0" max="100" value="50" oninput="setPlayerVolume(this.value)">
-        </div>
+        <input id="volumeSlider" type="range" min="0" max="100" value="50" oninput="setPlayerVolume(this.value)">
       </div>
 
       <div class="cmdbar">
-        <input id="manualCommand" type="text" placeholder="Type command like: play god's plan / red light / what is gravity">
+        <input id="manualCommand" type="text" placeholder="play god's plan / red light / what is gravity">
         <button onclick="runManualCommand()">RUN</button>
       </div>
 
       <div class="examples">
         Examples:<br>
-        <b>play god's plan</b><br>
-        <b>play naksha</b><br>
-        <b>stop music</b><br>
-        <b>red light</b><br>
-        <b>brightness 30</b><br>
-        <b>what is photosynthesis</b>
+        <b>Drake play god's plan</b><br>
+        <b>Drake play naksha</b><br>
+        <b>Drake stop music</b><br>
+        <b>Drake red light</b><br>
+        <b>Drake brightness 30</b><br>
+        <b>Drake what is photosynthesis</b>
       </div>
     </div>
 
@@ -256,7 +232,7 @@
       <span class="badge">Wake: drake / drink / break / dark / dre</span>
       <span class="badge">BLE: CLK</span>
       <span class="badge">Music: YouTube</span>
-      <span class="badge">STOP only</span>
+      <span class="badge">Only PLAY + STOP</span>
 
       <div class="kv">
         <div>Voice</div><div id="voiceIndicator">stopped</div>
@@ -265,12 +241,12 @@
         <div>Volume</div><div id="volumeIndicator">50</div>
       </div>
 
-      <div class="mini" style="margin-top:14px">
-        Recommended order:<br>
+      <div style="margin-top:14px;font-size:13px;color:#cfd6e6;line-height:1.6">
+        Order:<br>
         1. CONNECT LIGHT<br>
         2. ARM AUDIO<br>
         3. START VOICE<br>
-        4. Say: <b>Drake play god's plan</b>
+        4. Say command
       </div>
     </div>
   </div>
@@ -283,38 +259,33 @@
   <script src="https://www.youtube.com/iframe_api"></script>
 
   <script>
-    // =========================================================
-    // CONFIG
-    // =========================================================
+    // ================= CONFIG =================
     const MISTRAL_API_KEY = "sb4uBrl67jk1RV2gg1gLZqh2lkoSq3Py";
     const YT_API_KEY = "AIzaSyBW9ylko1FTzfvco2NShiRE4lkI29fP7tc";
 
     const DEVICE_NAME = "CLK";
     const SERVICE_UUID = "0000fff0-0000-1000-8000-00805f9b34fb";
     const CHAR_UUID = "0000fff3-0000-1000-8000-00805f9b34fb";
+
     const WAKE_WORDS = ["drake","drink","break","dark","dre"];
 
-    // =========================================================
-    // STATE
-    // =========================================================
+    // ================= STATE =================
     let bleDevice = null;
     let bleChar = null;
 
     let recognition = null;
     let voiceRunning = false;
     let manuallyStoppedVoice = false;
-    let lastCommandTime = 0;
     let handlingSpeech = false;
+    let lastCommandTime = 0;
+    let restartTimer = null; // FIXED ERROR
 
     let ytPlayer = null;
     let ytReady = false;
     let audioArmed = false;
     let currentVolume = 50;
-    let currentNowPlaying = null;
 
-    // =========================================================
-    // UI HELPERS
-    // =========================================================
+    // ================= UI =================
     function log(msg){
       const box = document.getElementById("debug");
       const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
@@ -355,9 +326,7 @@
       log(`JS ERROR: ${message} @ ${lineno}:${colno}`);
     };
 
-    // =========================================================
-    // BLE LIGHT
-    // =========================================================
+    // ================= BLE LIGHT =================
     function packet(r,g,b){
       return new Uint8Array([0x7e,0x07,0x05,0x03,r,g,b,0x10,0xef]);
     }
@@ -386,6 +355,7 @@
         setBleState("connected");
         setStatus("BLE connected");
         log("BLE connected");
+
       }catch(e){
         setBleState("error");
         setStatus("BLE error");
@@ -413,6 +383,7 @@
         }
 
         log(`LIGHT -> ${r},${g},${b}`);
+
       }catch(e){
         log("BLE WRITE ERROR: " + e);
       }
@@ -422,9 +393,7 @@
       setLight(r,g,b);
     }
 
-    // =========================================================
-    // YOUTUBE PLAYER
-    // =========================================================
+    // ================= YOUTUBE =================
     function onYouTubeIframeAPIReady(){
       ytPlayer = new YT.Player("player", {
         height: "280",
@@ -452,6 +421,7 @@
         }
       });
     }
+
     window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 
     async function armAudio(){
@@ -474,6 +444,7 @@
         setAudioState("armed");
         setStatus("audio armed");
         log("AUDIO ARMED");
+
       }catch(e){
         log("ARM AUDIO ERROR: " + e);
       }
@@ -504,11 +475,11 @@
       const q = normalizeText(query);
       const title = normalizeText(item?.snippet?.title || "");
       const channel = normalizeText(item?.snippet?.channelTitle || "");
+
       let score = 0;
 
       if(title === q) score += 200;
       if(title.includes(q)) score += 120;
-      if(q.includes(title) && title.length > 3) score += 50;
 
       const words = q.split(" ").filter(Boolean);
       for(const w of words){
@@ -518,8 +489,8 @@
 
       if(title.includes("official")) score += 18;
       if(title.includes("audio")) score += 12;
-      if(title.includes("lyrics")) score += 4;
       if(title.includes("music video")) score += 8;
+      if(title.includes("lyrics")) score += 4;
 
       if(title.includes("cover")) score -= 25;
       if(title.includes("remix")) score -= 12;
@@ -597,10 +568,10 @@
         ytPlayer.setVolume(currentVolume);
         ytPlayer.playVideo();
 
-        currentNowPlaying = { videoId, title, channel };
         setNowPlaying(`Now playing: ${title} — ${channel}`);
         setStatus("playing music");
         log(`YT PLAY -> ${title} (${videoId})`);
+
       }catch(e){
         setStatus("music error");
         log("YT PLAY ERROR: " + e.message);
@@ -621,9 +592,7 @@
       }
     }
 
-    // =========================================================
-    // SPEAK
-    // =========================================================
+    // ================= SPEAK =================
     function speak(text){
       try{
         window.speechSynthesis.cancel();
@@ -637,9 +606,7 @@
       }
     }
 
-    // =========================================================
-    // FAST LOCAL COMMAND PARSING
-    // =========================================================
+    // ================= FAST COMMANDS =================
     const COLOR_MAP = {
       red:[255,0,0],
       blue:[0,0,255],
@@ -704,19 +671,20 @@
       return null;
     }
 
-    // =========================================================
-    // VOICE
-    // =========================================================
+    // ================= VOICE =================
     function getWakeWord(text){
       const t = text.toLowerCase();
+
       for(const w of WAKE_WORDS){
         if(t.includes(w)) return w;
       }
+
       return null;
     }
 
     function createRecognition(){
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
       if(!SR){
         log("SpeechRecognition unsupported");
         setStatus("speech unsupported");
@@ -739,6 +707,7 @@
         try{
           const now = Date.now();
           const text = e.results[e.results.length - 1][0].transcript.toLowerCase().trim();
+
           log("HEARD -> " + text);
 
           if(now - lastCommandTime < 700){
@@ -752,6 +721,7 @@
           if(!wake) return;
 
           const command = text.replace(wake, "").trim();
+
           if(!command){
             speak("Yes?");
             return;
@@ -780,8 +750,10 @@
           }
 
           await askAI(command);
+
           handlingSpeech = false;
           setStatus("voice active");
+
         }catch(err){
           handlingSpeech = false;
           log("VOICE RESULT ERROR: " + err);
@@ -793,6 +765,7 @@
           log("VOICE idle");
           return;
         }
+
         log("VOICE ERROR: " + e.error);
       };
 
@@ -802,7 +775,8 @@
         log("VOICE ENDED");
 
         if(!manuallyStoppedVoice){
-          clearTimeout(restartTimer);
+          if(restartTimer) clearTimeout(restartTimer);
+
           restartTimer = setTimeout(() => {
             try{
               rec.start();
@@ -810,7 +784,7 @@
             }catch(e){
               log("VOICE RESTART ERROR: " + e);
             }
-          }, 250);
+          }, 300);
         }
       };
 
@@ -834,7 +808,11 @@
 
     function stopVoice(){
       manuallyStoppedVoice = true;
-      clearTimeout(restartTimer);
+
+      if(restartTimer){
+        clearTimeout(restartTimer);
+        restartTimer = null;
+      }
 
       if(recognition){
         try{
@@ -849,9 +827,7 @@
       setStatus("voice stopped");
     }
 
-    // =========================================================
-    // AI
-    // =========================================================
+    // ================= AI =================
     const SYSTEM_PROMPT = `
 You are Drake, a smart assistant that controls BLE RGB lights, YouTube music, and answers questions.
 
@@ -911,8 +887,8 @@ Rules:
           body: JSON.stringify({
             model: "mistral-large-latest",
             messages: [
-              { role:"system", content:SYSTEM_PROMPT },
-              { role:"user", content:userText }
+              {role:"system", content:SYSTEM_PROMPT},
+              {role:"user", content:userText}
             ],
             temperature: 0.2
           })
@@ -933,6 +909,7 @@ Rules:
 
         const obj = JSON.parse(raw);
         await handleAIObject(obj);
+
       }catch(e){
         log("AI ERROR: " + e);
         speak("AI error aaya");
@@ -989,12 +966,11 @@ Rules:
       log("Unhandled AI object -> " + JSON.stringify(obj));
     }
 
-    // =========================================================
-    // MANUAL COMMAND BOX
-    // =========================================================
+    // ================= MANUAL COMMAND =================
     async function runManualCommand(){
       const input = document.getElementById("manualCommand");
       const command = input.value.trim();
+
       if(!command) return;
 
       log("MANUAL -> " + command);
@@ -1014,9 +990,7 @@ Rules:
       await askAI(command);
     }
 
-    // =========================================================
-    // BOOT
-    // =========================================================
+    // ================= BOOT =================
     window.addEventListener("load", () => {
       setStatus("ready");
       setVoiceState("stopped");
